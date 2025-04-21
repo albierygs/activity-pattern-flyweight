@@ -12,15 +12,9 @@ public class Dealership {
     carList.clear();
     Runtime runtime = Runtime.getRuntime();
 
-    runtime.gc(); // Força coleta de lixo antes do teste
+    runGarbage(runtime);
 
-    try {
-      Thread.sleep(100); // Dá um tempo pro GC trabalhar
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    long previousMemory = runtime.totalMemory() - runtime.freeMemory();
+    long previousMemory = calculateMemory(runtime);
 
     if (withFlyweight) {
       runWithFlywieght();
@@ -28,28 +22,36 @@ public class Dealership {
       runWithoutFlyweight();
     }
 
-    runtime.gc(); // Força coleta de lixo depois da criação
+    runGarbage(runtime);
+
+    long afterMemory = calculateMemory(runtime);
+
+    return (afterMemory - previousMemory) / (1024 * 1024);
+  }
+
+  private static void runGarbage(Runtime runtime) {
+    runtime.gc();
 
     try {
-      Thread.sleep(100); // Espera novamente
+      Thread.sleep(100);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
 
-    long afterMemory = runtime.totalMemory() - runtime.freeMemory();
-
-    return (afterMemory - previousMemory) / (1024 * 1024); // Retorna em MB
+  private static long calculateMemory(Runtime runtime) {
+    return runtime.totalMemory() - runtime.freeMemory();
   }
 
   public static void runWithoutFlyweight() {
     for (int i = 0; i < NUM_OBJECTS; i++) {
-      carList.add(new CompleteCar("Modelo" + (i % 10))); // Cria novos objetos mesmo com tipos repetidos
+      carList.add(new CompleteCar("Modelo" + (i % 10)));
     }
   }
 
   public static void runWithFlywieght() {
     for (int i = 0; i < NUM_OBJECTS; i++) {
-      carList.add(new Car(CarFactory.getCharacterType("Modelo" + (i % 10)))); // Reutiliza objetos do mesmo tipo
+      carList.add(new Car(CarFactory.getCharacterType("Modelo" + (i % 10))));
     }
   }
 }
